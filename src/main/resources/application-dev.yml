@@ -1,0 +1,9 @@
+
+server:
+  port: 8080
+
+rabbitMQ:
+  exchangeName: exchange-one
+  queueName: tien.test.qrcode.2
+  routingKey: routing.*
+  routingKeyOne: routing.one
