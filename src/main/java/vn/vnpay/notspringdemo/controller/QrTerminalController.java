@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.*;
 import vn.vnpay.notspringdemo.dto.ResponseDTO;
 import vn.vnpay.notspringdemo.service.QrTerminalService;
 import vn.vnpay.notspringdemo.util.Constant;
+
 @RestController
 @RequestMapping("/qr-terminal")
 public class QrTerminalController {
@@ -20,8 +21,11 @@ public class QrTerminalController {
     @GetMapping()
     public ResponseEntity<Object> searchQrTerminal(@RequestParam Long pageNo, @RequestParam Long pageSize) {
 
+        logger.info("Thead Id {}: [ GetMapping  path = /qr-terminal  with Params: [pageNo: {}, pageSize: {}]]",
+                Thread.currentThread().getId(),
+                pageNo,
+                pageSize);
 
-        logger.info("GetMapping  path = /qr-terminal  with Params: [pageNo: {}, pageSize: {}]", pageNo, pageSize);
         return ResponseEntity.ok(
                 ResponseDTO.builder()
                         .code(Constant.RESPONSE.CODE.OK)
@@ -31,9 +35,12 @@ public class QrTerminalController {
     }
 
     @GetMapping("/{key}")
-    public ResponseEntity<Object> getQrTerminalOnRedisByKey(@PathVariable("key") String key) {
+    public ResponseEntity<Object> searchQrTerminalOnRedis(@PathVariable("key") String key) {
 
-        logger.info("GetMapping  path = /qr-terminal/{key}  with Params: [key: {}]", key);
+        logger.info("Thread Id {}: [ GetMapping  path = /qr-terminal/{key}  with Params: [key: {}] ]",
+                Thread.currentThread().getId(),
+                key);
+
         return ResponseEntity.ok(
                 ResponseDTO.builder()
                         .code(Constant.RESPONSE.CODE.OK)

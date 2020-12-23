@@ -5,17 +5,20 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.amqp.RabbitTemplateConfigurer;
 import org.springframework.stereotype.Service;
+import vn.vnpay.notspringdemo.config.RabbitService;
 import vn.vnpay.notspringdemo.config.RedisService;
 import vn.vnpay.notspringdemo.dao.QrTerminalDAO;
 import vn.vnpay.notspringdemo.dto.PageDTO;
 import vn.vnpay.notspringdemo.dto.QrTerminalDTO;
 import vn.vnpay.notspringdemo.exception.GeneralException;
+import vn.vnpay.notspringdemo.mapper.impl.QrTerminalMapper;
 import vn.vnpay.notspringdemo.service.QrTerminalService;
 import vn.vnpay.notspringdemo.util.Constant;
 import vn.vnpay.notspringdemo.util.GsonUtil;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -23,8 +26,7 @@ import java.util.Map;
 
 @Service
 @Slf4j
-public class QrTerminalServiceImpl implements QrTerminalService
-{
+public class QrTerminalServiceImpl implements QrTerminalService {
 
     private final Logger logger = LoggerFactory.getLogger(QrTerminalServiceImpl.class);
 
@@ -40,6 +42,9 @@ public class QrTerminalServiceImpl implements QrTerminalService
     @Autowired
     private RedisService redisService;
 
+    @Autowired
+    private RabbitService rabbitService;
+
     /**
      * khong the cast result nhan dc trong  result.get("RESULTS") thanh resultset vi ket qua nhan dc la kieu ArrayList();
      *
@@ -52,43 +57,50 @@ public class QrTerminalServiceImpl implements QrTerminalService
     public PageDTO searchQrTerminal(Long pageNo, Long pageSize) {
 
         Map<String, Object> inParams = new HashMap<>();
-        inParams.put("PI_PAGE_NO", pageNo);
-        inParams.put("PI_PAGE_SIZE", pageSize);
+        inParams.put("PI_PAGE_NO",pageNo);
+        inParams.put("PI_PAGE_SIZE",pageSize);
+
         Map<String, Object> result = qrTerminalDAO.searchQrTerminalByCondition(inParams);
 
         List<Map<String, Object>> listMap = (List<Map<String, Object>>) result.get("RESULTS");
         final long totalResult = Long.parseLong(result.get("PO_TOTAL").toString());
 
         List<QrTerminalDTO> qrTerminalDTOS = new ArrayList<>();
+
         for (Map<String, Object> mapResult : listMap) {
 
             QrTerminalDTO qrTerminalDTO = new QrTerminalDTO();
             qrTerminalDTO.convertQrTerminal(mapResult);
             qrTerminalDTOS.add(qrTerminalDTO);
             try {
-                Boolean checkSetKey = redisService
+                Boolean isSetKey = redisService
                         .setKeyCustom(qrTerminalDTO.getTerminalId() + qrTerminalDTO.getMerchantId(), qrTerminalDTO);
                 int i = 0;
-                while (i < 3 && checkSetKey == Boolean.FALSE) {
-                    checkSetKey = redisService
+                while (i < 3 && isSetKey == Boolean.FALSE) {
+                    isSetKey = redisService
                             .setKeyCustom(qrTerminalDTO.getTerminalId() + qrTerminalDTO.getMerchantId(), qrTerminalDTO);
                     i++;
                 }
-                if (checkSetKey == Boolean.TRUE) {
-                    //su dung cho exchange type: direct, fanout, topicExchange
-                    logger.info("Push Rabbit MQ Queue: exchangeName: {} routing-key: {} value: [{}]",
-                            topicExchangeName, routingKeyOne, GsonUtil.toJson(qrTerminalDTO));
+                if (isSetKey == Boolean.TRUE) {
+
+                    logger.info("Thread Id {} : [Push Rabbit MQ Queue: exchangeName: {} routing-key: {} value: [{}] ]",
+                            Thread.currentThread().getId(),
+                            topicExchangeName,
+                            routingKeyOne,
+                            GsonUtil.toJson(qrTerminalDTO));
+
+                    rabbitService.sendMessage(GsonUtil.toJson(qrTerminalDTO), routingKeyOne);
                 }
             } catch (Exception ex) {
-                logger.error("Exception: ", ex);
+                logger.error("Thread Id {} : Exception ", Thread.currentThread().getId());
+                ex.printStackTrace();
             }
         }
-        try {
-            Thread.sleep(5000);
-        } catch (Exception ex) {
+        logger.info("Thread Id {} : [Result PageDTO: [totalItem: {}, content: {} ]]",
+                Thread.currentThread().getId(),
+                totalResult,
+                qrTerminalDTOS);
 
-        }
-        logger.info("Result PageDTO: [totalItem: {}, content: {} ]", totalResult, qrTerminalDTOS);
         return PageDTO.builder()
                 .total(totalResult)
                 .content(qrTerminalDTOS)
@@ -101,7 +113,14 @@ public class QrTerminalServiceImpl implements QrTerminalService
         if (!redisService.hasKey(key)) {
             throw new GeneralException(Constant.RESPONSE.CODE.C404, Constant.RESPONSE.MESSAGE.DATA_NOT_EXISTS);
         }
-        QrTerminalDTO qrTerminalDTO = GsonUtil.fromJson(redisService.getKey(key).toString(), QrTerminalDTO.class);
+
+        String value = redisService.getKey(key).toString();
+        QrTerminalDTO qrTerminalDTO = GsonUtil.fromJson(value, QrTerminalDTO.class);
+
+        logger.info("Thread Id {} : [Result Object:  content: {} ]",
+                Thread.currentThread().getId(),
+                value);
+
         return PageDTO.builder()
                 .total(1L)
                 .content(qrTerminalDTO)

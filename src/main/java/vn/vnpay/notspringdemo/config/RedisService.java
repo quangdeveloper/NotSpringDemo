@@ -18,30 +18,56 @@ public class RedisService {
     public void setKey(String key, Object value) {
         try {
             redisTemplate.opsForValue().set(key, GsonUtil.toJson(value));
-            logger.info("Set key {} successful. Value is: {}", key, value);
+            logger.info("Thread Id {} : [Set key {} successful. Value is: {}]",
+                    Thread.currentThread().getId(),
+                    key,
+                    value);
+
         } catch (Exception exception) {
-            logger.error("Set key {} failed: {} because: {}", key, value, exception.getMessage());
+            logger.error("Thread Id {} : [Set key {} failed: {}]  because:",
+                    Thread.currentThread().getId(),
+                    key,
+                    value);
+            exception.printStackTrace();
         }
     }
 
     public Boolean setKeyCustom(String key, Object value) {
         try {
             redisTemplate.opsForValue().set(key, GsonUtil.toJson(value));
-            logger.info("Set key {} successful. Value is: {}", key, value);
+
+            logger.info("Thread Id {} : [Set key {} successful. Value is: {}]",
+                    Thread.currentThread().getId(),
+                    key,
+                    value);
+
             return Boolean.TRUE;
         } catch (Exception exception) {
-            logger.error("Set key {} failed: {} because: {}", key, value, exception.getMessage());
+
+            logger.error("Thread Id {} : [Set key {} failed: {} ] because:",
+                    Thread.currentThread().getId(),
+                    key,
+                    value);
+
             return Boolean.FALSE;
         }
     }
 
     public Object getKey(String key) {
         if (Boolean.TRUE.equals(redisTemplate.hasKey(key))) {
-            logger.info("Redis get key = {} value = ({})", key,redisTemplate.opsForValue().get(key));
+
+            logger.info("Thread Id {} : [Redis get key = {} value = ({})]",
+                    Thread.currentThread().getId(),
+                    key,
+                    redisTemplate.opsForValue().get(key));
+
             return redisTemplate.opsForValue().get(key);
 
         } else {
-            logger.warn("Key {}  not exists!!!!", key);
+            logger.error("Thread Id {} : [ Key {}  not exists!!!!]",
+                    Thread.currentThread().getId(),
+                    key);
+
             return null;
         }
     }

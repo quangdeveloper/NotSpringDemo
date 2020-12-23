@@ -25,7 +25,10 @@ public class AppExceptionHandler {
                 .code(ex.getCode())
                 .message(ex.getMessage())
                 .build();
-        logger.error("[AppExceptionHandle.GeneralException: {}]", ex.getMessage());
+
+        logger.error("[Thread Id {} : AppExceptionHandle.GeneralException:]", Thread.currentThread().getId());
+        ex.printStackTrace();
+
         return new ResponseEntity<>(responseDTO, HttpStatus.OK);
     }
 
@@ -35,7 +38,10 @@ public class AppExceptionHandler {
                 .code(ex.getCode())
                 .message(ex.getMessage())
                 .build();
-        logger.error("[AppExceptionHandle.SQLCustomException: {}]", ex.getMessage());
+
+        logger.error("[Thread Id {} : AppExceptionHandle.SQLCustomException:]", Thread.currentThread().getId());
+        ex.printStackTrace();
+
         return new ResponseEntity<>(responseDTO, HttpStatus.OK);
 
     }

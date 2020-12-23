@@ -2,7 +2,7 @@ package vn.vnpay.notspringdemo.config;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
-import org.springframework.boot.autoconfigure.jdbc.DataSourceTransactionManagerAutoConfiguration;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
@@ -14,38 +14,86 @@ import javax.sql.DataSource;
 @Configuration
 public class DBConfig {
 
+    @Value("${database.driver-class-name}")
+    private String driverClassName;
+
+    @Value("${database.url}")
+    private String urlConnect;
+
+    @Value("${database.username}")
+    private String username;
+
+    @Value("${database.password}")
+    private String password;
+
+    @Value("${database.pool.name}")
+    private String poolName;
+
+    @Value("${database.pool.maximun-pool-size}")
+    private int maximumPoolSize;
+
+    @Value("${database.pool.allow-pool-suspension}")
+    private Boolean allowPoolSuspension;
+
+    @Value("${database.pool.minimun-idle}")
+    private int minimunIdle;
+
+    @Value("${database.pool.idle-timeout}")
+    private long idleTimeout;
+
+    @Value("${database.pool.connection-timeout}")
+    private long connectionTimeout;
+
+    @Value("${database.pool.max-life-time}")
+    private long maxLifeTime;
+
+    @Value("${database.pool.auto-commit}")
+    private Boolean isAutoCommit;
+
+    @Value("${database.cache-prep-stmts}")
+    private String cachePrepStmts;
+
+    @Value("${database.prep-stmt-cache-size}")
+    private String prepStmtCacheSize;
+
+    @Value("${database.prep-stmt-cache-sql-limit}")
+    private String prepStmtCacheSqlLimit;
+
+    @Value("${database.use-server-prep-stmts}")
+    private String userServerPrepStmts;
+
     @Bean
     public DataSource dataSource() {
 
         HikariConfig hikariConfig = new HikariConfig();
-        hikariConfig.setDriverClassName("oracle.jdbc.OracleDriver");
-        hikariConfig.setJdbcUrl("jdbc:oracle:thin:@10.22.7.63:1521/GTGTTEST");
-        hikariConfig.setUsername("mms");
-        hikariConfig.setPassword("mms");
-        hikariConfig.setPoolName("hikariPoolTest");
-        hikariConfig.setMaximumPoolSize(10);
-        hikariConfig.setAllowPoolSuspension(true);
-        hikariConfig.setMinimumIdle(5);
-        hikariConfig.setIdleTimeout(30000);
-        hikariConfig.setConnectionTimeout(30000);
-        hikariConfig.setMaxLifetime(200000);
-        hikariConfig.setAutoCommit(false);
+        hikariConfig.setDriverClassName(driverClassName);
+        hikariConfig.setJdbcUrl(urlConnect);
+        hikariConfig.setUsername(username);
+        hikariConfig.setPassword(password);
+        hikariConfig.setPoolName(poolName);
+        hikariConfig.setMaximumPoolSize(maximumPoolSize);
+        hikariConfig.setAllowPoolSuspension(allowPoolSuspension);
+        hikariConfig.setMinimumIdle(minimunIdle);
+        hikariConfig.setIdleTimeout(idleTimeout);
+        hikariConfig.setConnectionTimeout(connectionTimeout);
+        hikariConfig.setMaxLifetime(maxLifeTime);
+        hikariConfig.setAutoCommit(isAutoCommit);
 
-//        hikariConfig.addDataSourceProperty("dataSource.cachePrepStmts", "true");
-//        hikariConfig.addDataSourceProperty("dataSource.prepStmtCacheSize", "250");
-//        hikariConfig.addDataSourceProperty("dataSource.prepStmtCacheSqlLimit", "2048");
-//        hikariConfig.addDataSourceProperty("dataSource.useServerPrepStmts", "true");
+        /**
+         * useServerPrepStmts - Sử dụng các câu lệnh chuẩn bị từ phía máy chủ nếu máy chủ hỗ trợ chúng?
+         * cachePrepStmts - Trình điều khiển có nên lưu vào bộ nhớ cache giai đoạn phân tích cú pháp của
+         * PreparedStatements của các câu lệnh được chuẩn bị từ phía máy khách, "kiểm tra" tính phù hợp của các
+         * câu lệnh được chuẩn bị từ phía máy chủ
+         */
+//        hikariConfig.addDataSourceProperty("dataSource.cachePrepStmts", cachePrepStmts);
+//        hikariConfig.addDataSourceProperty("dataSource.prepStmtCacheSize", prepStmtCacheSize);
+//        hikariConfig.addDataSourceProperty("dataSource.prepStmtCacheSqlLimit", prepStmtCacheSqlLimit);
+//        hikariConfig.addDataSourceProperty("dataSource.useServerPrepStmts", userServerPrepStmts);
 
         return new HikariDataSource(hikariConfig);
     }
 
-    /**
-     * useServerPrepStmts - Sử dụng các câu lệnh chuẩn bị từ phía máy chủ nếu máy chủ hỗ trợ chúng?
-     * <p>
-     * cachePrepStmts - Trình điều khiển có nên lưu vào bộ nhớ cache giai đoạn phân tích cú pháp của PreparedStatements
-     * của các câu lệnh được chuẩn bị từ phía máy khách, "kiểm tra" tính phù hợp của các câu lệnh được chuẩn bị từ phía
-     * máy chủ
-     */
+
 
 
     @Bean

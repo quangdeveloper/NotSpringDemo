@@ -3,7 +3,56 @@ server:
   port: 8080
 
 rabbitMQ:
-  exchangeName: exchange-one
+  host: 10.22.7.88
+  port: 6789
+  username: qrcode
+  password: qrcode
+  exchange-type: topic
+  virtual-host: qrcode
+  request-heart-beat: 45
+  topicExchangeName: exchange-one
   queueName: tien.test.qrcode.2
   routingKey: routing.*
   routingKeyOne: routing.one
+
+redis:
+  password: testredis@123
+  database: 0
+  connection-timeout: 500000
+  lettuce:
+    pool:
+      max-active: 30
+      max-idle: 20
+      min-idle: 10
+      max-wait: 60000
+      time-between-evict-run: 60000
+  sentinel:
+    master: redismaster
+    nodes: >
+       10.22.7.111:26379,
+       10.22.7.112:26379
+
+database:
+  driver-class-name: oracle.jdbc.OracleDriver
+  host: 10.22.7.63
+  post: 1521
+  url: jdbc:oracle:thin:@10.22.7.63:1521/GTGTTEST
+  username: mms
+  password: mms
+  sid: GTGTTEST
+  pool:
+    name: hikariPoolTest
+    maximun-pool-size: 10
+    allow-pool-suspension: true
+    minimun-idle: 5
+    idle-timeout: 30000
+    connection-timeout: 30000
+    max-life-time: 200000
+    auto-commit: false
+  cache-prep-stmts: true
+  prep-stmt-cache-size: 250
+  prep-stmt-cache-sql-limit: 2048
+  use-server-prep-stmts: true
+
+
+
