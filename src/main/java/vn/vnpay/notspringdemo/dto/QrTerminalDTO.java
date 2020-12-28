@@ -23,14 +23,6 @@ public class QrTerminalDTO {
 
     private String merchantId;
 
-    public void convertQrTerminal(Map map) {
-        setId(Long.parseLong(map.get("ID").toString()));
-        setTerminalId(map.get("TERMINAL_ID").toString());
-        setMerchantId(map.get("MERCHANT_ID").toString());
-        setTerminalName(map.get("TERMINAL_NAME") == null ? " " : map.get("TERMINAL_NAME").toString());
-        setTerminalAddress(map.get("TERMINAL_ADDRESS") == null ? " " : map.get("TERMINAL_ADDRESS").toString());
-    }
-
     public void convertQrTerminal(ResultSet resultSet) throws SQLException{
 
             setId(Long.parseLong(resultSet.getString("ID")));

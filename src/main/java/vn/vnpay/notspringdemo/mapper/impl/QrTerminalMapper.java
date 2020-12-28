@@ -24,7 +24,7 @@ public class QrTerminalMapper implements RowMapper<QrTerminalDTO> {
             return new QrTerminalDTO(id, terminalId, terminalName, terminalAddress, merchantId);
 
         } catch (SQLException ex) {
-            logger.error("Thread Id {}: SQLException", Thread.currentThread().getId());
+            logger.error("Thread Id {}: SQLException code {}", Thread.currentThread().getId(), ex.getErrorCode());
             ex.printStackTrace();
             return null;
         }

@@ -14,23 +14,34 @@ rabbitMQ:
   queueName: tien.test.qrcode.2
   routingKey: routing.*
   routingKeyOne: routing.one
+  channel:
+    max-total: 50
+    max-idle: 15
+    min-idle: 5
+    max-wait: 120000
+    time-between-eviction-runs: 60000
+
 
 redis:
   password: testredis@123
   database: 0
   connection-timeout: 500000
+  port: 26379
   lettuce:
     pool:
-      max-active: 30
+      max-total: 30
       max-idle: 20
       min-idle: 10
       max-wait: 60000
       time-between-evict-run: 60000
   sentinel:
     master: redismaster
+#    nodes: >
+#      10.22.7.111:26379,
+#      10.22.7.112:26379
     nodes: >
-       10.22.7.111:26379,
-       10.22.7.112:26379
+       10.22.7.111,
+       10.22.7.112
 
 database:
   driver-class-name: oracle.jdbc.OracleDriver
@@ -43,7 +54,7 @@ database:
   pool:
     name: hikariPoolTest
     maximun-pool-size: 10
-    allow-pool-suspension: true
+    allow-pool-suspension: false
     minimun-idle: 5
     idle-timeout: 30000
     connection-timeout: 30000

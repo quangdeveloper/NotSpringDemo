@@ -21,7 +21,7 @@ public class QrTerminalController {
     @GetMapping()
     public ResponseEntity<Object> searchQrTerminal(@RequestParam Long pageNo, @RequestParam Long pageSize) {
 
-        logger.info("Thead Id {}: [ GetMapping  path = /qr-terminal  with Params: [pageNo: {}, pageSize: {}]]",
+        logger.info("Thead Id {}: [ GetMapping  path = /qr-terminal  with RequestParam: [pageNo: {}, pageSize: {}]]",
                 Thread.currentThread().getId(),
                 pageNo,
                 pageSize);
@@ -37,7 +37,7 @@ public class QrTerminalController {
     @GetMapping("/{key}")
     public ResponseEntity<Object> searchQrTerminalOnRedis(@PathVariable("key") String key) {
 
-        logger.info("Thread Id {}: [ GetMapping  path = /qr-terminal/{key}  with Params: [key: {}] ]",
+        logger.info("Thread Id {}: [ GetMapping  path = /qr-terminal/{key}  with PathVariable: [key: {}] ]",
                 Thread.currentThread().getId(),
                 key);
 
@@ -47,6 +47,6 @@ public class QrTerminalController {
                         .message(Constant.RESPONSE.MESSAGE.OK)
                         .value(qrTerminalService.searchQrTerminalOnRedis(key))
                         .build());
-
     }
+
 }

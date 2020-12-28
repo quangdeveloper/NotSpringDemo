@@ -1,9 +1,10 @@
 package vn.vnpay.notspringdemo.dao;
-import java.sql.ResultSet;
+import vn.vnpay.notspringdemo.model.ParameterORA;
+import java.util.List;
 import java.util.Map;
 
 public interface QrTerminalDAO {
 
-    Map<String, Object> searchQrTerminalByCondition(Map<String, Object> inParams);
+    Map<String, Object> searchQrTerminalByCondition(List<ParameterORA> parameterORAs);
 
 }

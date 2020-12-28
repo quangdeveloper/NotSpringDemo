@@ -10,6 +10,8 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 
 import javax.sql.DataSource;
+import java.sql.Connection;
+import java.sql.SQLException;
 
 @Configuration
 public class DBConfig {
@@ -78,23 +80,19 @@ public class DBConfig {
         hikariConfig.setConnectionTimeout(connectionTimeout);
         hikariConfig.setMaxLifetime(maxLifeTime);
         hikariConfig.setAutoCommit(isAutoCommit);
-
         /**
          * useServerPrepStmts - Sử dụng các câu lệnh chuẩn bị từ phía máy chủ nếu máy chủ hỗ trợ chúng?
          * cachePrepStmts - Trình điều khiển có nên lưu vào bộ nhớ cache giai đoạn phân tích cú pháp của
          * PreparedStatements của các câu lệnh được chuẩn bị từ phía máy khách, "kiểm tra" tính phù hợp của các
          * câu lệnh được chuẩn bị từ phía máy chủ
          */
-//        hikariConfig.addDataSourceProperty("dataSource.cachePrepStmts", cachePrepStmts);
-//        hikariConfig.addDataSourceProperty("dataSource.prepStmtCacheSize", prepStmtCacheSize);
-//        hikariConfig.addDataSourceProperty("dataSource.prepStmtCacheSqlLimit", prepStmtCacheSqlLimit);
-//        hikariConfig.addDataSourceProperty("dataSource.useServerPrepStmts", userServerPrepStmts);
+        hikariConfig.addDataSourceProperty("dataSource.cachePrepStmts", cachePrepStmts);
+        hikariConfig.addDataSourceProperty("dataSource.prepStmtCacheSize", prepStmtCacheSize);
+        hikariConfig.addDataSourceProperty("dataSource.prepStmtCacheSqlLimit", prepStmtCacheSqlLimit);
+        hikariConfig.addDataSourceProperty("dataSource.useServerPrepStmts", userServerPrepStmts);
 
         return new HikariDataSource(hikariConfig);
     }
-
-
-
 
     @Bean
     @Primary
@@ -105,6 +103,18 @@ public class DBConfig {
         manager.setRollbackOnCommitFailure(true);
         return manager;
     }
+
+    @Bean
+    public Connection getConnection() {
+        try {
+            return dataSource().getConnection();
+        } catch (SQLException sqlEx) {
+            sqlEx.printStackTrace();
+            return null;
+        }
+
+    }
+
 
     @Bean
     JdbcTemplate jdbcTemplate() {
