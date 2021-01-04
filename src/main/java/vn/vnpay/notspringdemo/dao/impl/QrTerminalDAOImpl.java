@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import vn.vnpay.notspringdemo.dao.QrTerminalDAO;
 import vn.vnpay.notspringdemo.model.ParameterORA;
+
 import java.util.List;
 import java.util.Map;
 
@@ -18,10 +19,14 @@ public class QrTerminalDAOImpl extends BaseDAO implements QrTerminalDAO {
 
         String sqlQuery = "{call PKG_QUANGNV.SEARCH_QRTERMINAL(?, ?, ?, ?, ?)}";
 
-        logger.info("Thread Id {} : SQL query [{}] input param {}",
+        StringBuilder stringBuilder = new StringBuilder();
+        parameterORAs.forEach(
+                param -> stringBuilder.append(param.getName() + ": " + param.getValue() + "\t"));
+
+        logger.info("Thread Id {} : SQL query {} input param {}",
                 Thread.currentThread().getId(),
                 sqlQuery,
-                parameterORAs.toString());
+                stringBuilder);
 
         return callProcedure(sqlQuery, parameterORAs);
     }

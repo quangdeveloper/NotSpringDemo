@@ -50,21 +50,19 @@ public class BaseDAO extends PackageDAO {
                 if (connection != null) {
                     connection.rollback();
                 }
-            } catch (SQLException e) {
-                logger.error("Thread Id {} : SQLException ", Thread.currentThread().getId());
-                e.printStackTrace();
+            } catch (SQLException exception1) {
+                logger.error("Thread Id {} : SQLException ", Thread.currentThread().getId(),exception1);
             }
-            logger.error("Thread Id {}: SQLException ", Thread.currentThread().getId());
-            sqlException.printStackTrace();
+            logger.error("Thread Id {}: SQLException ", Thread.currentThread().getId(), sqlException);
             return null;
         }
     }
 
     public void setParameters(List<ParameterORA> parameterORAs, CallableStatement callableStatement) {
 
-        logger.info("Thread Id {} : Convert input param [{}] ",
-                Thread.currentThread().getId(),
-                parameterORAs);
+//        logger.info("Thread Id {} : Convert input param [{}] ",
+//                Thread.currentThread().getId(),
+//                parameterORAs);
         try {
             for (ParameterORA parameterORA : parameterORAs) {
 
@@ -85,7 +83,7 @@ public class BaseDAO extends PackageDAO {
                 }
             }
         } catch (SQLException sqlException) {
-            sqlException.printStackTrace();
+            logger.error("Thread Id {}: SQLException ", Thread.currentThread().getId(), sqlException);
         }
     }
 

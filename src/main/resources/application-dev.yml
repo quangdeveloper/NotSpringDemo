@@ -15,30 +15,26 @@ rabbitMQ:
   routingKey: routing.*
   routingKeyOne: routing.one
   channel:
-    max-total: 50
-    max-idle: 15
-    min-idle: 5
+    max-total: 30
+    max-idle: 25
+    min-idle: 20
     max-wait: 120000
-    time-between-eviction-runs: 60000
-
+    time-between-eviction-runs: 10
 
 redis:
   password: testredis@123
   database: 0
-  connection-timeout: 500000
+  connection-timeout: 60000
   port: 26379
   lettuce:
     pool:
       max-total: 30
-      max-idle: 20
-      min-idle: 10
+      max-idle: 25
+      min-idle: 20
       max-wait: 60000
-      time-between-evict-run: 60000
+      time-between-evict-run: 10
   sentinel:
     master: redismaster
-#    nodes: >
-#      10.22.7.111:26379,
-#      10.22.7.112:26379
     nodes: >
        10.22.7.111,
        10.22.7.112
@@ -53,12 +49,12 @@ database:
   sid: GTGTTEST
   pool:
     name: hikariPoolTest
-    maximun-pool-size: 10
+    maximun-pool-size: 50
     allow-pool-suspension: false
-    minimun-idle: 5
+    minimun-idle: 15
     idle-timeout: 30000
     connection-timeout: 30000
-    max-life-time: 200000
+    max-life-time: 180000
     auto-commit: false
   cache-prep-stmts: true
   prep-stmt-cache-size: 250

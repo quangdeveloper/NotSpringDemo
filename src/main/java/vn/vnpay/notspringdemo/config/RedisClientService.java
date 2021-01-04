@@ -57,7 +57,7 @@ public class RedisClientService {
     private static GenericObjectPool<StatefulRedisConnection<String, Object>> pool;
 
     @PostConstruct
-    GenericObjectPool<StatefulRedisConnection<String, Object>> createPool() {
+    private GenericObjectPool<StatefulRedisConnection<String, Object>> createPool() {
         try {
             RedisURI redisURI2 = RedisURI.Builder
                     .sentinel(nodes.get(0), port, redisMaster)
@@ -82,23 +82,21 @@ public class RedisClientService {
 
             return pool;
         } catch (Exception exception) {
-            exception.printStackTrace();
+            logger.error("Thead Id {} : Exception", Thread.currentThread().getId(), exception);
             return null;
         }
     }
 
-    StatefulRedisConnection<String, Object> getConnection() {
+    private StatefulRedisConnection<String, Object> getConnection() {
         try {
-            return this.pool.borrowObject();
+            return pool.borrowObject();
         } catch (Exception exception) {
-            logger.error("Thead Id {} : Exception", Thread.currentThread().getId());
-            exception.printStackTrace();
+            logger.error("Thead Id {} : Exception", Thread.currentThread().getId(), exception);
             return null;
         }
     }
 
-    RedisCommands<String, Object> getCommands() {
-
+    private RedisCommands<String, Object> getCommands() {
         return getConnection().sync();
     }
 
@@ -120,6 +118,7 @@ public class RedisClientService {
         if (result == null) {
             return false;
         }
+        pool.returnObject(commands.getStatefulConnection());
         return result.equals("OK");
     }
 
@@ -132,7 +131,7 @@ public class RedisClientService {
                 Thread.currentThread().getId(),
                 key,
                 result);
-
+        pool.returnObject(commands.getStatefulConnection());
         return result;
     }
 

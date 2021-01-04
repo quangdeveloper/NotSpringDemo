@@ -2,6 +2,8 @@ package vn.vnpay.notspringdemo.config;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -15,6 +17,8 @@ import java.sql.SQLException;
 
 @Configuration
 public class DBConfig {
+
+    private final Logger logger = LoggerFactory.getLogger(DBConfig.class);
 
     @Value("${database.driver-class-name}")
     private String driverClassName;
@@ -65,7 +69,7 @@ public class DBConfig {
     private String userServerPrepStmts;
 
     @Bean
-    public DataSource dataSource() {
+    public DataSource configDataSource() {
 
         HikariConfig hikariConfig = new HikariConfig();
         hikariConfig.setDriverClassName(driverClassName);
@@ -80,26 +84,20 @@ public class DBConfig {
         hikariConfig.setConnectionTimeout(connectionTimeout);
         hikariConfig.setMaxLifetime(maxLifeTime);
         hikariConfig.setAutoCommit(isAutoCommit);
-        /**
-         * useServerPrepStmts - Sử dụng các câu lệnh chuẩn bị từ phía máy chủ nếu máy chủ hỗ trợ chúng?
-         * cachePrepStmts - Trình điều khiển có nên lưu vào bộ nhớ cache giai đoạn phân tích cú pháp của
-         * PreparedStatements của các câu lệnh được chuẩn bị từ phía máy khách, "kiểm tra" tính phù hợp của các
-         * câu lệnh được chuẩn bị từ phía máy chủ
-         */
-        hikariConfig.addDataSourceProperty("dataSource.cachePrepStmts", cachePrepStmts);
-        hikariConfig.addDataSourceProperty("dataSource.prepStmtCacheSize", prepStmtCacheSize);
-        hikariConfig.addDataSourceProperty("dataSource.prepStmtCacheSqlLimit", prepStmtCacheSqlLimit);
-        hikariConfig.addDataSourceProperty("dataSource.useServerPrepStmts", userServerPrepStmts);
+
+        hikariConfig.addDataSourceProperty("cachePrepStmts", cachePrepStmts);
+        hikariConfig.addDataSourceProperty("prepStmtCacheSize", prepStmtCacheSize);
+        hikariConfig.addDataSourceProperty("prepStmtCacheSqlLimit", prepStmtCacheSqlLimit);
+        hikariConfig.addDataSourceProperty("useServerPrepStmts", userServerPrepStmts);
 
         return new HikariDataSource(hikariConfig);
     }
 
     @Bean
     @Primary
-    DataSourceTransactionManager dataSourceTransactionManager() {
-
+    DataSourceTransactionManager configDataSourceTransactionManager() {
         DataSourceTransactionManager manager = new DataSourceTransactionManager();
-        manager.setDataSource(dataSource());
+        manager.setDataSource(configDataSource());
         manager.setRollbackOnCommitFailure(true);
         return manager;
     }
@@ -107,18 +105,15 @@ public class DBConfig {
     @Bean
     public Connection getConnection() {
         try {
-            return dataSource().getConnection();
-        } catch (SQLException sqlEx) {
-            sqlEx.printStackTrace();
+            return configDataSource().getConnection();
+        } catch (SQLException  sqlException) {
+            logger.error("Thread Id {}: SQLException ", Thread.currentThread().getId(), sqlException);
             return null;
         }
-
     }
-
 
     @Bean
-    JdbcTemplate jdbcTemplate() {
-        return new JdbcTemplate(dataSource());
+    JdbcTemplate getJbcTemplate() {
+        return new JdbcTemplate(configDataSource());
     }
-
 }

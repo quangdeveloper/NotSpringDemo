@@ -1,11 +1,6 @@
 package vn.vnpay.notspringdemo.config;
 
 import com.rabbitmq.client.Channel;
-import com.rabbitmq.client.Connection;
-import com.rabbitmq.client.ConnectionFactory;
-import io.lettuce.core.support.ConnectionPoolSupport;
-import org.apache.commons.pool2.PooledObject;
-import org.apache.commons.pool2.PooledObjectFactory;
 import org.apache.commons.pool2.impl.GenericObjectPool;
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 import org.slf4j.Logger;
@@ -16,7 +11,6 @@ import org.springframework.stereotype.Service;
 import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.concurrent.TimeoutException;
 
 
 @Service
@@ -32,24 +26,6 @@ public class RabbitService {
 
     @Value("${rabbitMQ.routingKey}")
     private String routingKey;
-
-    @Value("${rabbitMQ.host}")
-    private String host;
-
-    @Value("${rabbitMQ.port}")
-    private int port;
-
-    @Value("${rabbitMQ.username}")
-    private String username;
-
-    @Value("${rabbitMQ.password}")
-    private String password;
-
-    @Value("${rabbitMQ.virtual-host}")
-    private String virtualHost;
-
-    @Value("${rabbitMQ.request-heart-beat}")
-    private int requestHeartBeat;
 
     @Value("${rabbitMQ.exchange-type}")
     private String exchangeType;
@@ -69,35 +45,7 @@ public class RabbitService {
     @Value("${rabbitMQ.channel.time-between-eviction-runs}")
     private long timeBetweenEvictRuns;
 
-
-    private ConnectionFactory getConnectionFactory() {
-
-        ConnectionFactory factory = new ConnectionFactory();
-        factory.setHost(host);
-        factory.setPort(port);
-        factory.setUsername(username);
-        factory.setPassword(password);
-        factory.setVirtualHost(virtualHost);
-        factory.setRequestedHeartbeat(requestHeartBeat);
-        return factory;
-    }
-
-    public Connection getConnection() {
-
-        try {
-            return getConnectionFactory().newConnection();
-        } catch (IOException ioException) {
-            logger.error("Thread Id {} IOException: ", Thread.currentThread().getId());
-            ioException.printStackTrace();
-            return null;
-        } catch (TimeoutException timeoutException) {
-            logger.error("Thread Id {} TimeoutException: ", Thread.currentThread().getId());
-            timeoutException.printStackTrace();
-            return null;
-        }
-    }
-
-    private static GenericObjectPool<Channel> pool;
+    private static GenericObjectPool<Channel> channelPool;
 
     @PostConstruct
     private GenericObjectPool<Channel> createChannelPool() {
@@ -108,14 +56,20 @@ public class RabbitService {
         genericObjectPoolConfig.setMinIdle(minIdle);
         genericObjectPoolConfig.setMaxWaitMillis(maxWait);
         genericObjectPoolConfig.setTimeBetweenEvictionRunsMillis(timeBetweenEvictRuns);
-        logger.info("Created  Rabbit MQ pool {}", pool.getJmxName());
-        return pool;
+        genericObjectPoolConfig.setBlockWhenExhausted(true);
+
+        PoolChannelRabbitMQFactory factory = new PoolChannelRabbitMQFactory();
+        channelPool = new GenericObjectPool<>(factory);
+        channelPool.setConfig(genericObjectPoolConfig);
+        logger.info("Created Rabbit MQ Channel pool {}", channelPool.getJmxName());
+        return channelPool;
     }
 
     public void sendMessage(String mess, String routeKey) {
-
+        Channel channel = null;
         try {
-            Channel channel = getConnection().createChannel();
+
+            channel = channelPool.borrowObject();
 
             // 3 params of exchange: name , type, unable auto delete
             channel.exchangeDeclare(topicExchangeName, exchangeType, true);
@@ -133,22 +87,14 @@ public class RabbitService {
                     routingKey,
                     mess);
 
-            channel.close();
         } catch (IOException ioException) {
 
             logger.error("Thread Id {}: IOException",
                     Thread.currentThread().getId(),
                     ioException);
-
-        } catch (TimeoutException timeoutException) {
-
-            logger.error("Thread Id {} TimeoutException: ",
-                    Thread.currentThread().getId(),
-                    timeoutException);
-
         } catch (NullPointerException exception) {
 
-            logger.error("Thread Id {} NullPoiterException: ",
+            logger.error("Thread Id {} NullPointerException: ",
                     Thread.currentThread().getId(),
                     exception);
 
@@ -156,6 +102,9 @@ public class RabbitService {
             logger.error("Thread Id {} Exception: ",
                     Thread.currentThread().getId(),
                     exception);
+        }
+        if (channel != null) {
+            channelPool.returnObject(channel);
         }
     }
 

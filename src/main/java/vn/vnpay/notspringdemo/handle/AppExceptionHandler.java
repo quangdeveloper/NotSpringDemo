@@ -26,9 +26,7 @@ public class AppExceptionHandler {
                 .message(ex.getMessage())
                 .build();
 
-        logger.error("[Thread Id {} : AppExceptionHandle.GeneralException code:]", Thread.currentThread().getId(), ex.getCode() );
-        ex.printStackTrace();
-
+        logger.error("[Thread Id {} : AppExceptionHandle.GeneralException code:]", Thread.currentThread().getId(), ex);
         return new ResponseEntity<>(responseDTO, HttpStatus.OK);
     }
 
@@ -39,11 +37,8 @@ public class AppExceptionHandler {
                 .message(ex.getMessage())
                 .build();
 
-        logger.error("[Thread Id {} : AppExceptionHandle.SQLCustomException code: {} ]", Thread.currentThread().getId(), ex.getCode());
-        ex.printStackTrace();
-
+        logger.error("[Thread Id {} : AppExceptionHandle.SQLCustomException code: {} ]", Thread.currentThread().getId(), ex);
         return new ResponseEntity<>(responseDTO, HttpStatus.OK);
-
     }
 
 

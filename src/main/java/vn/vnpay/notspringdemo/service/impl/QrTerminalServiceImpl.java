@@ -88,12 +88,11 @@ public class QrTerminalServiceImpl implements QrTerminalService {
                         rabbitService.sendMessage(GsonUtil.toJson(qrTerminalDTO), routingKeyOne);
                     }
                 } catch (Exception ex) {
-                    logger.error("Thread Id {} : Exception ", Thread.currentThread().getId());
-                    ex.printStackTrace();
+                    logger.error("Thread Id {} : Exception ", Thread.currentThread().getId(), ex);
                 }
             }
         } catch (SQLException sqlException) {
-            sqlException.printStackTrace();
+            logger.error("Thread Id {} : Exception ", Thread.currentThread().getId(), sqlException);
         }
         logger.info("Thread Id {} : [Result PageDTO: [totalItem: {}, content: {} ]]",
                 Thread.currentThread().getId(),
