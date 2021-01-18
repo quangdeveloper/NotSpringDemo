@@ -3,6 +3,7 @@ package vn.vnpay.notspringdemo.config;
 import com.rabbitmq.client.Channel;
 import org.apache.commons.pool2.impl.GenericObjectPool;
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
+import org.apache.logging.log4j.ThreadContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -61,7 +62,9 @@ public class RabbitService {
         PoolChannelRabbitMQFactory factory = new PoolChannelRabbitMQFactory();
         channelPool = new GenericObjectPool<>(factory);
         channelPool.setConfig(genericObjectPoolConfig);
+
         logger.info("Created Rabbit MQ Channel pool {}", channelPool.getJmxName());
+
         return channelPool;
     }
 
@@ -70,18 +73,10 @@ public class RabbitService {
         try {
 
             channel = channelPool.borrowObject();
-
-            // 3 params of exchange: name , type, unable auto delete
-            channel.exchangeDeclare(topicExchangeName, exchangeType, true);
-
-            // 4 params of queue: name, is persistence (hàng đợi bền), is monopoly (độc quyền),
-            // auto delete (tu dong xoa) not info map
-            channel.queueDeclare(queueName, false, false, false, null);
-            channel.queueBind(queueName, topicExchangeName, routingKey);
             channel.basicPublish(topicExchangeName, routeKey, null, mess.getBytes(StandardCharsets.UTF_8));
 
-            logger.info("Thead Id {}: [Success: Send message to Queue {} exchangeName: {}, routingKey: {}, value [{}]]",
-                    Thread.currentThread().getId(),
+            logger.info("Token [{}]:  Send message success",
+                    ThreadContext.get("token"),
                     queueName,
                     topicExchangeName,
                     routingKey,
@@ -89,18 +84,18 @@ public class RabbitService {
 
         } catch (IOException ioException) {
 
-            logger.error("Thread Id {}: IOException",
-                    Thread.currentThread().getId(),
+            logger.error("Token [{}] IOException: ",
+                    ThreadContext.get("token"),
                     ioException);
         } catch (NullPointerException exception) {
 
-            logger.error("Thread Id {} NullPointerException: ",
-                    Thread.currentThread().getId(),
+            logger.error("Token [{}] NullPointerException: ",
+                    ThreadContext.get("token"),
                     exception);
 
         } catch (Exception exception) {
-            logger.error("Thread Id {} Exception: ",
-                    Thread.currentThread().getId(),
+            logger.error("Token [{}] Exception: ",
+                    ThreadContext.get("token"),
                     exception);
         }
         if (channel != null) {

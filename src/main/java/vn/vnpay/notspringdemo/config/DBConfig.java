@@ -2,6 +2,7 @@ package vn.vnpay.notspringdemo.config;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
+import org.apache.logging.log4j.ThreadContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -107,13 +108,10 @@ public class DBConfig {
         try {
             return configDataSource().getConnection();
         } catch (SQLException  sqlException) {
-            logger.error("Thread Id {}: SQLException ", Thread.currentThread().getId(), sqlException);
+            logger.error("Token [{}] : SQLException ", ThreadContext.get("token"), sqlException);
             return null;
         }
     }
 
-    @Bean
-    JdbcTemplate getJbcTemplate() {
-        return new JdbcTemplate(configDataSource());
-    }
+
 }

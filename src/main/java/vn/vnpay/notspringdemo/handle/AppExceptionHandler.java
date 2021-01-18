@@ -1,6 +1,7 @@
 package vn.vnpay.notspringdemo.handle;
 
 import lombok.extern.slf4j.Slf4j;
+import org.apache.logging.log4j.ThreadContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -26,7 +27,7 @@ public class AppExceptionHandler {
                 .message(ex.getMessage())
                 .build();
 
-        logger.error("[Thread Id {} : AppExceptionHandle.GeneralException code:]", Thread.currentThread().getId(), ex);
+        logger.error("[Token [{}]  : AppExceptionHandle.GeneralException code:]", ThreadContext.get("token"),ex);
         return new ResponseEntity<>(responseDTO, HttpStatus.OK);
     }
 
@@ -37,7 +38,7 @@ public class AppExceptionHandler {
                 .message(ex.getMessage())
                 .build();
 
-        logger.error("[Thread Id {} : AppExceptionHandle.SQLCustomException code: {} ]", Thread.currentThread().getId(), ex);
+        logger.error("[Token [{}]  : AppExceptionHandle.SQLCustomException code: {} ]", ThreadContext.get("token"), ex);
         return new ResponseEntity<>(responseDTO, HttpStatus.OK);
     }
 

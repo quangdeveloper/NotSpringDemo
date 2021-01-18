@@ -6,10 +6,12 @@ import com.rabbitmq.client.ConnectionFactory;
 import org.apache.commons.pool2.BasePooledObjectFactory;
 import org.apache.commons.pool2.PooledObject;
 import org.apache.commons.pool2.impl.DefaultPooledObject;
+import org.apache.logging.log4j.ThreadContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import vn.vnpay.notspringdemo.exception.GeneralException;
 
 import javax.annotation.PostConstruct;
 import java.io.IOException;
@@ -38,6 +40,15 @@ public class PoolChannelRabbitMQFactory extends BasePooledObjectFactory<Channel>
     @Value("${rabbitMQ.request-heart-beat}")
     private int requestHeartBeat;
 
+    @Value("${rabbitMQ.queueName}")
+    private String queueName;
+
+    @Value("${rabbitMQ.topicExchangeName}")
+    private String topicExchangeName;
+
+    @Value("${rabbitMQ.routingKey}")
+    private String routingKey;
+
     private static Connection connection;
 
     private ConnectionFactory getConnectionFactory() {
@@ -53,44 +64,67 @@ public class PoolChannelRabbitMQFactory extends BasePooledObjectFactory<Channel>
     }
 
     @PostConstruct
-    public void getConnection() {
+    public void initConnection() {
         try {
+
             connection = getConnectionFactory().newConnection();
-            connection.createChannel();
-            logger.info("Thread id {}: Create rabbit connection successful with connection id is {} ",
-                    Thread.currentThread().getId(),
+            int i = 0;
+            while (i < 3 && connection == null) {
+                connection = getConnectionFactory().newConnection();
+                i++;
+            }
+            if (connection == null) {
+                throw new GeneralException("C404", "Rabbit MQ can't connect");
+            }
+
+            logger.info("Token [{}] : Create rabbit connection successful with connection id is {} ",
+                    ThreadContext.get("token"),
                     connection.getAddress());
+
         } catch (IOException ioException) {
 
-            logger.error("Thread Id {} IOException: ",
-                    Thread.currentThread().getId(),
+            logger.error("Token [{}]  IOException: ",
+                    ThreadContext.get("token"),
                     ioException);
 
         } catch (TimeoutException timeoutException) {
 
-            logger.error("Thread Id {} TimeoutException: ",
-                    Thread.currentThread().getId(),
+            logger.error("Token [{}]  TimeoutException: ",
+                    ThreadContext.get("token"),
                     timeoutException);
         }
     }
 
     /**
      * dùng để tạo channels
+     *
      * @return channel of rabbit mq
      * @throws Exception ex
      */
     @Override
     public Channel create() throws Exception {
-        Channel channel = connection.createChannel();
 
-        logger.info("Thread Id {} Created channel rabbit mq: {}",
-                Thread.currentThread().getId(),
-                channel.getChannelNumber());
-        return channel;
+        if (connection != null) {
+
+            Channel channel = connection.createChannel();
+            // 3 params of exchange: name , type, unable auto delete
+            channel.exchangeDeclare("exchange-one", "topic", true);
+
+            // 4 params of queue: name, is persistence (hàng đợi bền), is monopoly (độc quyền),
+            // auto delete (tu dong xoa) not info map
+            channel.queueDeclare("tien.test.qrcode.2", false, false, false, null);
+            channel.queueBind("tien.test.qrcode.2", "exchange-one", "routing.*");
+
+            logger.info("Created channel rabbit mq: {}", channel.getChannelNumber());
+            return channel;
+        } else {
+            throw new GeneralException("C404", "Rabbit MQ can't connect");
+        }
     }
 
     /**
      * dùng để tạo ra 1 PoolObject
+     *
      * @param channel channel
      * @return PoolObject
      */

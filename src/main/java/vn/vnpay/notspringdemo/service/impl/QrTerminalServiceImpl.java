@@ -1,6 +1,7 @@
 package vn.vnpay.notspringdemo.service.impl;
 
 import lombok.extern.slf4j.Slf4j;
+import org.apache.logging.log4j.ThreadContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,13 +13,12 @@ import vn.vnpay.notspringdemo.dao.QrTerminalDAO;
 import vn.vnpay.notspringdemo.dto.PageDTO;
 import vn.vnpay.notspringdemo.dto.QrTerminalDTO;
 import vn.vnpay.notspringdemo.exception.GeneralException;
+import vn.vnpay.notspringdemo.mapper.impl.QrTerminalMapper;
 import vn.vnpay.notspringdemo.model.ParameterORA;
 import vn.vnpay.notspringdemo.service.QrTerminalService;
 import vn.vnpay.notspringdemo.util.Constant;
 import vn.vnpay.notspringdemo.util.GsonUtil;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.*;
 
 @Service
@@ -43,65 +43,50 @@ public class QrTerminalServiceImpl implements QrTerminalService {
     private RabbitService rabbitService;
 
     /**
-     * khong the cast result nhan dc trong  result.get("RESULTS") thanh resultset vi ket qua nhan dc la kieu ArrayList();
+     * khong the cast result nhan dc trong  result.get("RESULTS") thanh resultset vi ket qua nhan dc la kieu ArrayList()
      *
      * @param pageNo   number page
      * @param pageSize item per page
      * @return PageDTO
      */
     @Override
-    public PageDTO searchQrTerminal(Long pageNo, Long pageSize) {
+    public <T> PageDTO searchQrTerminal(Long pageNo, Long pageSize, String keyword) {
 
         List<ParameterORA> parameterORAs = new ArrayList<>();
         ParameterORA parameterORA1 = new ParameterORA("PI_PAGE_NO", pageNo, "LONG");
         ParameterORA parameterORA2 = new ParameterORA("PI_PAGE_SIZE", pageSize, "LONG");
         parameterORAs.add(parameterORA1);
         parameterORAs.add(parameterORA2);
-        Map<String, Object> resultMap = qrTerminalDAO.searchQrTerminalByCondition(parameterORAs);
+        Map<String, Object> resultMap = qrTerminalDAO.searchQrTerminal(parameterORAs, new QrTerminalMapper());
 
-        ResultSet resultSet = (ResultSet) resultMap.get("RESULTS");
+        List<QrTerminalDTO> listResult = (List<QrTerminalDTO>) resultMap.get("RESULTS");
         final long totalResult = Long.parseLong(resultMap.get("PO_TOTAL").toString());
 
-        List<QrTerminalDTO> qrTerminalDTOS = new ArrayList<>();
-        try {
-            while (resultSet.next()) {
-                QrTerminalDTO qrTerminalDTO = new QrTerminalDTO();
-                qrTerminalDTO.convertQrTerminal(resultSet);
-                qrTerminalDTOS.add(qrTerminalDTO);
-                try {
-                    Boolean isSetKey = redisService
-                            .setKey(qrTerminalDTO.getTerminalId() + qrTerminalDTO.getMerchantId(), GsonUtil.toJson(qrTerminalDTO));
-                    int i = 0;
-                    while (i < 3 && isSetKey == Boolean.FALSE) {
-                        isSetKey = redisService
-                                .setKey(qrTerminalDTO.getTerminalId() + qrTerminalDTO.getMerchantId(), GsonUtil.toJson(qrTerminalDTO));
-                        i++;
-                    }
-                    if (isSetKey == Boolean.TRUE) {
+        listResult.forEach(qrterminal -> {
 
-                        logger.info("Thread Id {} : [Push Rabbit MQ Queue: exchangeName: {} routing-key: {} value: [{}] ]",
-                                Thread.currentThread().getId(),
-                                topicExchangeName,
-                                routingKeyOne,
-                                GsonUtil.toJson(qrTerminalDTO));
-
-                        rabbitService.sendMessage(GsonUtil.toJson(qrTerminalDTO), routingKeyOne);
-                    }
-                } catch (Exception ex) {
-                    logger.error("Thread Id {} : Exception ", Thread.currentThread().getId(), ex);
+            try {
+                Boolean isSetKey = redisService
+                        .setKey(qrterminal.getTerminalId() + qrterminal.getMerchantId(),
+                                GsonUtil.toJson(qrterminal));
+                int i = 0;
+                while (i < 3 && isSetKey == Boolean.FALSE) {
+                    isSetKey = redisService
+                            .setKey(qrterminal.getTerminalId() + qrterminal.getMerchantId(),
+                                    GsonUtil.toJson(qrterminal));
+                    i++;
                 }
+                if (isSetKey == Boolean.TRUE) {
+
+                    rabbitService.sendMessage(GsonUtil.toJson(qrterminal), routingKeyOne);
+                }
+            } catch (Exception exception) {
+                logger.error("Token [{}]: Exception ", ThreadContext.get("token"), exception);
             }
-        } catch (SQLException sqlException) {
-            logger.error("Thread Id {} : Exception ", Thread.currentThread().getId(), sqlException);
-        }
-        logger.info("Thread Id {} : [Result PageDTO: [totalItem: {}, content: {} ]]",
-                Thread.currentThread().getId(),
-                totalResult,
-                qrTerminalDTOS);
+        });
 
         return PageDTO.builder()
                 .total(totalResult)
-                .content(qrTerminalDTOS)
+                .content(listResult)
                 .build();
     }
 
@@ -115,8 +100,8 @@ public class QrTerminalServiceImpl implements QrTerminalService {
         String value = redisService.getKey(key).toString();
         QrTerminalDTO qrTerminalDTO = GsonUtil.fromJson(value, QrTerminalDTO.class);
 
-        logger.info("Thread Id {} : [Result Object:  content: {} ]",
-                Thread.currentThread().getId(),
+        logger.info("Token [{}] : [Result Object:  content: {} ]",
+                ThreadContext.get("token"),
                 value);
 
         return PageDTO.builder()

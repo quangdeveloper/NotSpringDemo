@@ -5,7 +5,7 @@ import vn.vnpay.notspringdemo.dto.PageDTO;
 
 public interface QrTerminalService {
 
-    PageDTO searchQrTerminal(Long pageNo, Long pageSize);
+    <T> PageDTO searchQrTerminal(Long pageNo, Long pageSize, String keyword);
 
     Object searchQrTerminalOnRedis(String key);
 }

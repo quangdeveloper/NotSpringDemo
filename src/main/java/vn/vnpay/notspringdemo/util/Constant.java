@@ -13,6 +13,8 @@ public interface Constant {
             String C400 = "400";
             String C403 = "403";
             String C404 = "404";
+            String C405 = "405";
+            String C405_PARAMETER = "405";
             String C409 = "409";
             String C999 = "999";
         }

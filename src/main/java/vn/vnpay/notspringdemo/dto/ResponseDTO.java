@@ -16,8 +16,8 @@ public class ResponseDTO {
     private Object value;
 
     public ResponseDTO(){
-        this.code = "500";
-        this.message = "Thực hiện thất bại";
+        this.code = "200";
+        this.message = "Thực hiện thành công";
         this.value = Collections.emptyList();
     }
 }

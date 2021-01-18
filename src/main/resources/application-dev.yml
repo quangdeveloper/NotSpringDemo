@@ -49,9 +49,9 @@ database:
   sid: GTGTTEST
   pool:
     name: hikariPoolTest
-    maximun-pool-size: 50
+    maximun-pool-size: 2
     allow-pool-suspension: false
-    minimun-idle: 15
+    minimun-idle: 1
     idle-timeout: 30000
     connection-timeout: 30000
     max-life-time: 180000

@@ -1,5 +1,6 @@
 package vn.vnpay.notspringdemo.mapper.impl;
 
+import org.apache.logging.log4j.ThreadContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import vn.vnpay.notspringdemo.dto.QrTerminalDTO;
@@ -24,7 +25,7 @@ public class QrTerminalMapper implements RowMapper<QrTerminalDTO> {
             return new QrTerminalDTO(id, terminalId, terminalName, terminalAddress, merchantId);
 
         } catch (SQLException ex) {
-            logger.error("Thread Id {}: SQLException code {}", Thread.currentThread().getId(), ex);
+            logger.error("Token [{}]: SQLException code {}", ThreadContext.get("token"), ex);
             return null;
         }
     }

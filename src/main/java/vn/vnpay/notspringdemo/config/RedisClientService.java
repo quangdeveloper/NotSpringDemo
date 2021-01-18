@@ -3,16 +3,19 @@ package vn.vnpay.notspringdemo.config;
 import io.lettuce.core.RedisClient;
 import io.lettuce.core.RedisURI;
 import io.lettuce.core.api.StatefulRedisConnection;
-import io.lettuce.core.api.sync.RedisCommands;
 import io.lettuce.core.support.ConnectionPoolSupport;
 import org.apache.commons.pool2.impl.GenericObjectPool;
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
+import org.apache.logging.log4j.ThreadContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import vn.vnpay.notspringdemo.exception.GeneralException;
+import vn.vnpay.notspringdemo.util.Constant;
 
 import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import java.time.Duration;
 import java.util.List;
 
@@ -82,7 +85,7 @@ public class RedisClientService {
 
             return pool;
         } catch (Exception exception) {
-            logger.error("Thead Id {} : Exception", Thread.currentThread().getId(), exception);
+            logger.error("Token [{}] Exception: ", ThreadContext.get("token"), exception);
             return null;
         }
     }
@@ -91,55 +94,55 @@ public class RedisClientService {
         try {
             return pool.borrowObject();
         } catch (Exception exception) {
-            logger.error("Thead Id {} : Exception", Thread.currentThread().getId(), exception);
+            logger.error("Token [{}] Exception: ", ThreadContext.get("token"), exception);
             return null;
         }
     }
 
-    private RedisCommands<String, Object> getCommands() {
-        return getConnection().sync();
-    }
-
-
     public Boolean setKey(String key, Object value) {
 
-        RedisCommands<String, Object> commands = getCommands();
+        StatefulRedisConnection<String, Object> redisConnection = getConnection();
+        if (redisConnection == null) {
+            logger.error("Token [{}] : Can not connect to redis server ", ThreadContext.get("token"));
+            throw new GeneralException(Constant.RESPONSE.CODE.C999, Constant.RESPONSE.MESSAGE.C999);
+        }
+
         if (value == null) {
             value = "NULL";
         }
-        String result = commands.set(key, value);
+        String result = redisConnection.sync().set(key, value);
 
-        logger.info("Thread Id {}: Redis Set [key:  {},  value: {}]  status return: {}",
-                Thread.currentThread().getId(),
+        logger.info("Token [{}] : Redis Set [key:  {},  value: {}]  status return: {}",
+                ThreadContext.get("token"),
                 key,
                 value,
                 result.equals("OK") ? "OK" : "FAIL");
 
-        if (result == null) {
-            return false;
-        }
-        pool.returnObject(commands.getStatefulConnection());
+        pool.returnObject(redisConnection);
         return result.equals("OK");
     }
 
     public Object getKey(String key) {
 
-        RedisCommands<String, Object> commands = getCommands();
-        Object result = commands.get(key);
+        StatefulRedisConnection<String, Object> redisConnection = getConnection();
 
-        logger.info("Thread Id {}: Redis Get [key:  {},  value: {}]",
-                Thread.currentThread().getId(),
-                key,
-                result);
-        pool.returnObject(commands.getStatefulConnection());
+        if (redisConnection == null) {
+            logger.error("Token [{}]: Can not connect to redis server ", ThreadContext.get("token"));
+            throw new GeneralException(Constant.RESPONSE.CODE.C999, Constant.RESPONSE.MESSAGE.C999);
+        }
+        Object result = redisConnection.sync().get(key);
+
+        logger.info("Token [{}]: Redis Get key {} successful",
+                ThreadContext.get("token"), key);
+        pool.returnObject(redisConnection);
         return result;
     }
 
     public Boolean hasKey(String key) {
 
         if (getKey(key) == null) {
-            logger.info("Thread Id {}: Key {} not exists on redis",
-                    Thread.currentThread().getId(),
+            logger.info("Token [{}]:  Key {} not exists on redis",
+                    ThreadContext.get("token"),
                     key);
             return false;
         }
