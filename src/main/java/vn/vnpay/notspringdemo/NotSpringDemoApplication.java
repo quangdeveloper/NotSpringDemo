@@ -11,7 +11,7 @@ import org.springframework.boot.autoconfigure.jdbc.DataSourceTransactionManagerA
         DataSourceTransactionManagerAutoConfiguration.class,
 })
 public class NotSpringDemoApplication {
-
+// check banch quang dev
     public static void main(String[] args) {
         SpringApplication.run(NotSpringDemoApplication.class, args);
     }
