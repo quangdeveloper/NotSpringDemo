@@ -12,7 +12,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import vn.vnpay.notspringdemo.exception.GeneralException;
-
 import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.util.concurrent.TimeoutException;
@@ -21,6 +20,30 @@ import java.util.concurrent.TimeoutException;
 public class PoolChannelRabbitMQFactory extends BasePooledObjectFactory<Channel> {
 
     private final Logger logger = LoggerFactory.getLogger(PoolChannelRabbitMQFactory.class);
+
+    private static String exchangeName;
+    private static String exchangeType;
+    private static String queueName;
+    private static String routingPattern;
+
+    @Value("${rabbitMQ.topic-exchange-name}")
+    private String exchangeNameEnv;
+
+    @Value("${rabbitMQ.queue-name}")
+    private String queueNameEnv;
+
+    @Value("${rabbitMQ.routing-key}")
+    private String routingKeyEnv;
+
+    @Value("${rabbitMQ.exchange-type}")
+    private String exchangeTypeEnv;
+
+    void setDataEnv() {
+        exchangeName = exchangeNameEnv;
+        exchangeType = exchangeTypeEnv;
+        queueName = queueNameEnv;
+        routingPattern = routingKeyEnv;
+    }
 
     @Value("${rabbitMQ.host}")
     private String host;
@@ -40,15 +63,6 @@ public class PoolChannelRabbitMQFactory extends BasePooledObjectFactory<Channel>
     @Value("${rabbitMQ.request-heart-beat}")
     private int requestHeartBeat;
 
-    @Value("${rabbitMQ.queueName}")
-    private String queueName;
-
-    @Value("${rabbitMQ.topicExchangeName}")
-    private String topicExchangeName;
-
-    @Value("${rabbitMQ.routingKey}")
-    private String routingKey;
-
     private static Connection connection;
 
     private ConnectionFactory getConnectionFactory() {
@@ -65,8 +79,8 @@ public class PoolChannelRabbitMQFactory extends BasePooledObjectFactory<Channel>
 
     @PostConstruct
     public void initConnection() {
+        setDataEnv();
         try {
-
             connection = getConnectionFactory().newConnection();
             int i = 0;
             while (i < 3 && connection == null) {
@@ -74,7 +88,7 @@ public class PoolChannelRabbitMQFactory extends BasePooledObjectFactory<Channel>
                 i++;
             }
             if (connection == null) {
-                throw new GeneralException("C404", "Rabbit MQ can't connect");
+                throw new GeneralException("C999", "Rabbit MQ can't connect");
             }
 
             logger.info("Token [{}] : Create rabbit connection successful with connection id is {} ",
@@ -105,15 +119,14 @@ public class PoolChannelRabbitMQFactory extends BasePooledObjectFactory<Channel>
     public Channel create() throws Exception {
 
         if (connection != null) {
-
             Channel channel = connection.createChannel();
             // 3 params of exchange: name , type, unable auto delete
-            channel.exchangeDeclare("exchange-one", "topic", true);
+            channel.exchangeDeclare(exchangeName, exchangeType, true);
 
             // 4 params of queue: name, is persistence (hàng đợi bền), is monopoly (độc quyền),
             // auto delete (tu dong xoa) not info map
-            channel.queueDeclare("tien.test.qrcode.2", false, false, false, null);
-            channel.queueBind("tien.test.qrcode.2", "exchange-one", "routing.*");
+            channel.queueDeclare(queueName, false, false, false, null);
+            channel.queueBind(queueName, exchangeName, routingPattern);
 
             logger.info("Created channel rabbit mq: {}", channel.getChannelNumber());
             return channel;

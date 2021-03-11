@@ -9,12 +9,12 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.List;
 
 @Configuration
 public class DBConfig {
@@ -85,7 +85,6 @@ public class DBConfig {
         hikariConfig.setConnectionTimeout(connectionTimeout);
         hikariConfig.setMaxLifetime(maxLifeTime);
         hikariConfig.setAutoCommit(isAutoCommit);
-
         hikariConfig.addDataSourceProperty("cachePrepStmts", cachePrepStmts);
         hikariConfig.addDataSourceProperty("prepStmtCacheSize", prepStmtCacheSize);
         hikariConfig.addDataSourceProperty("prepStmtCacheSqlLimit", prepStmtCacheSqlLimit);
@@ -102,16 +101,4 @@ public class DBConfig {
         manager.setRollbackOnCommitFailure(true);
         return manager;
     }
-
-    @Bean
-    public Connection getConnection() {
-        try {
-            return configDataSource().getConnection();
-        } catch (SQLException  sqlException) {
-            logger.error("Token [{}] : SQLException ", ThreadContext.get("token"), sqlException);
-            return null;
-        }
-    }
-
-
 }

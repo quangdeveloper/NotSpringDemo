@@ -21,10 +21,9 @@ public class QrTerminalController {
     private QrTerminalService qrTerminalService;
 
     @GetMapping()
-    public ResponseEntity<Object> searchQrTerminal(@RequestParam Long pageNo,
+    public ResponseEntity<Object> searchQrTerminal(@RequestParam  Long pageNo,
                                                    @RequestParam Long pageSize,
                                                    @RequestParam String keyword) {
-
         logger.info("Token [{}]: [ GetMapping  path = /qr-terminal  with RequestParam: [pageNo: {}, pageSize: {}]]",
                 ThreadContext.get("token"),
                 pageNo,

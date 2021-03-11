@@ -8,7 +8,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-
 import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -19,17 +18,11 @@ public class RabbitService {
 
     Logger logger = LoggerFactory.getLogger(RabbitService.class);
 
-    @Value("${rabbitMQ.queueName}")
+    @Value("${rabbitMQ.queue-name}")
     private String queueName;
 
-    @Value("${rabbitMQ.topicExchangeName}")
+    @Value("${rabbitMQ.topic-exchange-name}")
     private String topicExchangeName;
-
-    @Value("${rabbitMQ.routingKey}")
-    private String routingKey;
-
-    @Value("${rabbitMQ.exchange-type}")
-    private String exchangeType;
 
     @Value("${rabbitMQ.channel.max-total}")
     private int maxTotal;
@@ -75,11 +68,8 @@ public class RabbitService {
             channel = channelPool.borrowObject();
             channel.basicPublish(topicExchangeName, routeKey, null, mess.getBytes(StandardCharsets.UTF_8));
 
-            logger.info("Token [{}]:  Send message success",
+            logger.info("Token [{}]:  Send message {} success",
                     ThreadContext.get("token"),
-                    queueName,
-                    topicExchangeName,
-                    routingKey,
                     mess);
 
         } catch (IOException ioException) {

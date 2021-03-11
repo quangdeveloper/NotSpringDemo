@@ -8,10 +8,11 @@ import org.springframework.stereotype.Component;
 import javax.servlet.*;
 import java.io.IOException;
 import java.util.UUID;
-@Component
-public class FilterCustom  implements Filter {
 
-    private static final Logger logger = LoggerFactory.getLogger(FilterCustom.class);
+@Component
+public class FilterRequest implements Filter {
+
+    private static final Logger logger = LoggerFactory.getLogger(FilterRequest.class);
 
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {

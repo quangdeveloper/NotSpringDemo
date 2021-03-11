@@ -10,10 +10,10 @@ rabbitMQ:
   exchange-type: topic
   virtual-host: qrcode
   request-heart-beat: 45
-  topicExchangeName: exchange-one
-  queueName: tien.test.qrcode.2
-  routingKey: routing.*
-  routingKeyOne: routing.one
+  topic-exchange-name: exchange-one
+  queue-name: tien.test.qrcode.2
+  routing-key: routing.*
+  routing-key-one: routing.one
   channel:
     max-total: 30
     max-idle: 25
@@ -36,8 +36,8 @@ redis:
   sentinel:
     master: redismaster
     nodes: >
-       10.22.7.111,
-       10.22.7.112
+      10.22.7.111,
+      10.22.7.112
 
 database:
   driver-class-name: oracle.jdbc.OracleDriver

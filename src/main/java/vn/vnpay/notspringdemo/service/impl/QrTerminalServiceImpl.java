@@ -27,10 +27,7 @@ public class QrTerminalServiceImpl implements QrTerminalService {
 
     private final Logger logger = LoggerFactory.getLogger(QrTerminalServiceImpl.class);
 
-    @Value("${rabbitMQ.topicExchangeName}")
-    private String topicExchangeName;
-
-    @Value("${rabbitMQ.routingKeyOne}")
+    @Value("${rabbitMQ.routing-key-one}")
     private String routingKeyOne;
 
     @Autowired
@@ -112,10 +109,3 @@ public class QrTerminalServiceImpl implements QrTerminalService {
 
 }
 
-
-// su dung cho exchange type: header
-//                        MessageProperties messageProperties = new MessageProperties();
-//                        messageProperties.setHeader("name-control","yourself");
-//                        MessageConverter messageConverter = new SimpleMessageConverter();
-//                        Message message = messageConverter.toMessage(qrTerminal, messageProperties);
-//                        rabbitTemplate.send(message);

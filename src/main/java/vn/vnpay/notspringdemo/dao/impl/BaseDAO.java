@@ -1,6 +1,5 @@
 package vn.vnpay.notspringdemo.dao.impl;
 
-import com.zaxxer.hikari.HikariDataSource;
 import oracle.jdbc.internal.OracleTypes;
 import org.apache.logging.log4j.ThreadContext;
 import org.slf4j.Logger;
@@ -10,7 +9,6 @@ import vn.vnpay.notspringdemo.exception.GeneralException;
 import vn.vnpay.notspringdemo.mapper.RowMapper;
 import vn.vnpay.notspringdemo.model.ParameterORA;
 import vn.vnpay.notspringdemo.util.Constant;
-
 import javax.sql.DataSource;
 import java.sql.*;
 import java.util.*;
@@ -93,7 +91,6 @@ public class BaseDAO<T> extends PackageDAO {
                 connection.close();
             }
         } catch (SQLException sqlException) {
-            UUID uuid = UUID.randomUUID();
             logger.error("SQL exception: ", sqlException);
         }
     }
@@ -118,13 +115,12 @@ public class BaseDAO<T> extends PackageDAO {
                     String value = parameterORA.getValue().toString();
                     callableStatement.setString(parameterORA.getName(), value);
                 } else {
-                    String str = String.format("Type param %s not supported", parameterORA.getName());
-                    throw new GeneralException(Constant.RESPONSE.CODE.C405_PARAMETER, str);
+                    String error = String.format("Type param %s not supported", parameterORA.getName());
+                    throw new GeneralException(Constant.RESPONSE.CODE.C405_PARAMETER, error);
                 }
             }
         } catch (SQLException sqlException) {
             logger.error("Token [{}] : SQLException ", ThreadContext.get("token"), sqlException);
         }
     }
-
 }
